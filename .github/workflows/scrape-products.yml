@@ -13,6 +13,7 @@ jobs:
       - name: Call Render scrape endpoint
         run: |
           curl -X POST \
+            --fail \
             --retry 3 \
             --retry-delay 20 \
             --max-time 1800 \
