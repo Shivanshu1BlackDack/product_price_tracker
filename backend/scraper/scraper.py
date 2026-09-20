@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import ssl
 import time
@@ -6,12 +7,10 @@ from decimal import Decimal, InvalidOperation
 from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
+os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "0")
+
 from playwright.sync_api import sync_playwright
 
-
-# ============================================================
-# CONFIGURATION
-# ============================================================
 
 STORE_BASE_URL = "https://demo.inelabteamdev.com"
 PRODUCT_API_URL = f"{STORE_BASE_URL}/api/product"
@@ -19,12 +18,11 @@ PRODUCT_API_URL = f"{STORE_BASE_URL}/api/product"
 DEFAULT_MAX_ATTEMPTS = 3
 DEFAULT_TIMEOUT = 30000
 
-# The mock store requires continuous mouse movement over the
-# Reveal Price area. Keep this around 2 seconds.
+
 REVEAL_MOVE_SECONDS = 2.0
 
-# Maximum amount of time to wait for dynamically rendered data.
-DATA_WAIT_SECONDS = 10
+
+DATA_WAIT_SECONDS = 5
 
 
 def titleise_key(value):
@@ -109,9 +107,11 @@ def fetch_product_api_details(product_id):
     }
 
 
-# ============================================================
+ 
+
 # BASIC HELPERS
-# ============================================================
+ 
+
 
 def clean_text(value):
     if value is None:
@@ -212,14 +212,14 @@ def safe_texts(page, selector):
     return texts
 
 
-# ============================================================
+ 
+
 # COOKIE HELPERS
-# ============================================================
+ 
+
 
 def cookie_overlay_visible(page):
-    """
-    Returns True when the cookie overlay is currently visible.
-    """
+   
 
     selectors = [
         ".cookie-overlay",
@@ -248,9 +248,7 @@ def cookie_overlay_visible(page):
 
 
 def find_cookie_accept_button(page):
-    """
-    Find a visible cookie consent button.
-    """
+  
 
     selectors = [
         ".cookie-overlay button",
@@ -278,8 +276,6 @@ def find_cookie_accept_button(page):
                     button.inner_text()
                 ).lower()
 
-                # Buttons found inside the cookie container
-                # are already sufficiently identified.
                 if (
                     "cookie-overlay" in selector
                     or "cookie-banner" in selector
@@ -324,16 +320,7 @@ def accept_cookies(
     page,
     wait_seconds=8,
 ):
-    """
-    Handle a cookie banner when it is visible.
-
-    We do NOT repeatedly call this during normal mouse movement.
-    It is used:
-    1. during initial page loading
-    2. when a later interaction reveals that a cookie overlay
-       appeared and blocked the interaction
-    """
-
+   
     if not cookie_overlay_visible(page):
         return False
 
@@ -389,7 +376,6 @@ def accept_cookies(
 
             return True
 
-        # One extra forced attempt if overlay is still there.
         try:
 
             button.click(
@@ -418,9 +404,9 @@ def accept_cookies(
     return False
 
 
-# ============================================================
+
 # CATALOG DISCOVERY
-# ============================================================
+
 
 def _looks_like_product_record(data):
 
@@ -613,12 +599,7 @@ def _deduplicate_catalog(products):
 
 
 def discover_homepage_catalog(page):
-    """
-    Used only to populate/update the local catalog.
-
-    Tracking does NOT call this function.
-    """
-
+ 
     print(
         "  ├── discover product catalog"
     )
@@ -647,7 +628,6 @@ def discover_homepage_catalog(page):
 
         page.wait_for_timeout(1500)
 
-        # Initial cookie handling.
         if cookie_overlay_visible(page):
 
             accepted = accept_cookies(
@@ -803,9 +783,9 @@ def discover_homepage_catalog(page):
     return products
 
 
-# ============================================================
+ 
 # PRODUCT DETAILS
-# ============================================================
+ 
 
 def extract_product_page_details(
     page,
@@ -1234,9 +1214,9 @@ def extract_specifications(page):
     return {}
 
 
-# ============================================================
+ 
 # REVEAL BUTTON
-# ============================================================
+ 
 
 def find_reveal_button(page):
 
@@ -1272,9 +1252,9 @@ def find_reveal_button(page):
     return None
 
 
-# ============================================================
+ 
 # PRICE BLOCK SWEEP
-# ============================================================
+ 
 
 def move_across_price_block(page):
 
@@ -1398,9 +1378,9 @@ def move_across_price_block(page):
     )
 
 
-# ============================================================
+ 
 # CONTINUOUS MOVEMENT OVER REVEAL BUTTON
-# ============================================================
+ 
 
 def continuously_move_over_reveal_button(
     page,
@@ -1535,9 +1515,9 @@ def continuously_move_over_reveal_button(
     )
 
 
-# ============================================================
+ 
 # WAIT FOR REVEAL BUTTON TO ACTIVATE
-# ============================================================
+ 
 
 def reveal_progress_message(page):
     """Return the storefront's visible hover/reveal instruction."""
@@ -1673,9 +1653,9 @@ def wait_for_reveal_button_enabled(
     return None
 
 
-# ============================================================
+ 
 # CLICK REVEAL WITH COOKIE RECOVERY
-# ============================================================
+ 
 
 def wait_for_price_reveal_to_start(
     page,
@@ -1926,9 +1906,9 @@ def click_reveal_with_cookie_recovery(
             )
 
 
-# ============================================================
+ 
 # REVEAL PRICE - COMPLETE FLOW
-# ============================================================
+ 
 
 def reveal_price(page):
 
@@ -2082,9 +2062,9 @@ def reveal_price(page):
     )
 
 
-# ============================================================
+ 
 # CURRENT PRICE
-# ============================================================
+ 
 
 def extract_current_price(page):
 
@@ -2243,9 +2223,9 @@ def extract_current_price(page):
     return None
 
 
-# ============================================================
+ 
 # STOCK
-# ============================================================
+ 
 
 def extract_stock(page):
 
@@ -2357,9 +2337,9 @@ def extract_stock(page):
     return ""
 
 
-# ============================================================
+ 
 # OTHER PRODUCT VALUES
-# ============================================================
+ 
 
 def extract_original_price(page):
 
@@ -2503,9 +2483,9 @@ def extract_discount(page):
     return None
 
 
-# ============================================================
+ 
 # RESULT VALIDATION
-# ============================================================
+ 
 
 def validate_result(
     price,
@@ -2528,9 +2508,10 @@ def validate_result(
         )
 
 
-# ============================================================
+ 
 # DIRECT PRODUCT SCRAPER
-# ============================================================
+ 
+
 
 def scrape_product_by_id(
     product_id,
@@ -2983,9 +2964,11 @@ def scrape_product_by_id(
     }
 
 
-# ============================================================
+ 
+
 # LEGACY NAME-BASED SCRAPER
-# ============================================================
+ 
+
 
 def scrape_product_by_name(
     search_name,
@@ -3101,9 +3084,11 @@ def scrape_product_by_name(
     )
 
 
-# ============================================================
+ 
+
 # COMMAND LINE TESTING
-# ============================================================
+ 
+
 
 if __name__ == "__main__":
 

@@ -16,3 +16,5 @@ services:
         sync: false
       - key: DATABASE_URL
         sync: false
+      - key: PLAYWRIGHT_BROWSERS_PATH
+        value: "0"
