@@ -69,10 +69,6 @@ function Sidebar() {
 
         <div>
           <p className="status-title">Scraper: Active</p>
-
-          <p className="status-subtitle">
-            Worker nodes: 4/4
-          </p>
         </div>
       </div>
     </aside>
