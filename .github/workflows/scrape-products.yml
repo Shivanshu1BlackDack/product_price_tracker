@@ -1,1 +1,19 @@
+name: Scrape tracked products
 
+on:
+  schedule:
+    - cron: "0 */2 * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Render scrape endpoint
+        run: |
+          curl -X POST \
+            --retry 3 \
+            --retry-delay 20 \
+            --max-time 1800 \
+            "${{ secrets.RENDER_BACKEND_URL }}/api/products/scrape-all/"
