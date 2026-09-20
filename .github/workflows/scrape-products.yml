@@ -10,20 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Wake Render backend
-        run: |
-          curl \
-            --fail \
-            --retry 3 \
-            --retry-delay 20 \
-            --max-time 120 \
-            "${{ secrets.RENDER_BACKEND_URL }}/"
+      - name: Check out repository
+        uses: actions/checkout@v4
 
-      - name: Call Render scrape endpoint
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install backend dependencies
+        working-directory: backend
         run: |
-          curl -X POST \
-            --fail \
-            --retry 3 \
-            --retry-delay 20 \
-            --max-time 1800 \
-            "${{ secrets.RENDER_BACKEND_URL }}/api/products/scrape-all/"
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install chromium
+
+      - name: Scrape tracked products
+        working-directory: backend
+        env:
+          DEBUG: "False"
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ALLOWED_HOSTS: localhost,127.0.0.1
+          CORS_ALLOWED_ORIGINS: http://localhost:5173
+        run: python manage.py scrape_all_tracked
