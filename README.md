@@ -35,31 +35,7 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-If Windows says `python` is not recognized, use your installed Python path:
 
-```powershell
-cd "D:\product_price tracker\backend"
-& "C:\Users\HP\AppData\Local\Programs\Python\Python313\python.exe" -m venv venv
-.\venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m playwright install chromium
-copy .env.example .env
-python manage.py migrate
-python manage.py runserver
-```
-
-If PowerShell blocks activation or the venv launcher is easier, run through the venv Python directly:
-
-```powershell
-cd "D:\product_price tracker\backend"
-.\venv\Scripts\python.exe -m pip install -r requirements.txt
-.\venv\Scripts\python.exe -m playwright install chromium
-copy .env.example .env
-.\venv\Scripts\python.exe manage.py migrate
-.\venv\Scripts\python.exe manage.py runserver
-```
-
-If no database variables are set, Django uses local SQLite. For deployment, set Supabase PostgreSQL variables.
 
 ## Frontend Setup
 
@@ -90,8 +66,7 @@ Frontend:
 VITE_API_URL
 ```
 
-Use `DATABASE_URL` for Supabase. Keep `DEBUG=False` on Render.
-If your database password contains special URL characters such as `@`, encode them in `DATABASE_URL`; for example, write `@` as `%40`.
+
 
 ## API Endpoints
 
@@ -122,40 +97,16 @@ a failed run adds an audit entry without storing fake price data.
 Keep this command open in a third terminal while developing locally:
 
 ```cmd
-cd /d "D:\product_price tracker\backend"
 venv\Scripts\python.exe manage.py run_scrape_scheduler --interval-minutes 120 --run-immediately
 ```
 
 `--run-immediately` performs a batch when the scheduler starts, then repeats
-every two hours. Stop it with `Ctrl+C`.
-
-To verify one automatic batch without leaving the scheduler running:
-
-```cmd
-venv\Scripts\python.exe manage.py run_scrape_scheduler --once
-```
-
-To run the same batch manually from a terminal:
-
-```cmd
-venv\Scripts\python.exe manage.py scrape_all_tracked
-```
 
 ### Render / Production
 
-For deployment, use cron-job.org or another external scheduler instead of a
-long-running Django process. Configure it to send:
-
-```text
-POST https://your-render-service.onrender.com/api/products/scrape-all/
-```
 
 Schedule: every 2 hours.
 
-Use only one scheduler for a deployed backend: either the external cron job or
-the local `run_scrape_scheduler` command, never both. The endpoint scrapes all
-tracked products in headless mode, records retries/failures, and only stores
-price/stock history when validation succeeds.
 
 ## Headed vs Headless Scraper Demo
 
@@ -165,7 +116,7 @@ Headless mode is used by the API and scheduled cron:
 python manage.py scrape_product --id 1 --headless
 ```
 
-Headed mode opens Chromium visibly for the assignment screen recording:
+Headed mode opens Chromium visibly
 
 ```bash
 python manage.py scrape_product --id 1 --headed
@@ -175,13 +126,6 @@ To save the headed/headless run into the local database when the product exists:
 
 ```bash
 python manage.py scrape_product --id 1 --headed --save
-```
-
-Direct scraper CLI is also available:
-
-```bash
-python scraper/scraper.py --id 1 --headed
-python scraper/scraper.py --id 1
 ```
 
 ## Deployment
@@ -210,14 +154,3 @@ Supabase:
 - Create a PostgreSQL project.
 - Copy the pooled connection string into `DATABASE_URL`, or set the `DB_*` values.
 - Run Render deploy/migrations.
-
-## Submission Checklist
-
-- Live Vercel URL.
-- Live Render backend URL.
-- Public GitHub repository.
-- Supabase database configured.
-- cron-job.org calls `/api/products/scrape-all/` every 2 hours.
-- 2-4 minute headed scraper recording.
-- `DESIGN_NOTES.md`.
-- PDF resume.
